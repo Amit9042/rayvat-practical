@@ -1,35 +1,75 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Suspense, type FC, type PropsWithChildren } from "react";
+import { Provider } from "react-redux";
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+  type RouteObject,
+} from "react-router";
+import "./App.css";
+import { store } from "./app/apis/store";
+import { PathConstants } from "./app/constants";
+import { Login } from "./app/features/auth/components/Login";
 
-function App() {
-  const [count, setCount] = useState(0)
+type CustomRouteObject = RouteObject & {
+  isPublic?: boolean;
+};
 
+const appRoutes: CustomRouteObject[] = [
+  {
+    path: PathConstants.emptyRoute,
+    element: <Navigate to={`/${PathConstants.login}`} replace />,
+  },
+  {
+    path: PathConstants.login,
+    isPublic: true,
+    element: <Login />,
+  },
+  {
+    path: PathConstants.product,
+    children: [
+      {
+        path: PathConstants.list,
+        element: <>Product List</>,
+      },
+    ],
+  },
+  {
+    path: PathConstants.wildCardRoute,
+    isPublic: true,
+    errorElement: <>Error...</>,
+  },
+];
+
+export const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Provider store={store}>
+      <BrowserRouter>
+        <Suspense fallback={<>Loading...</>}>
+          <Routes>{renderRoutes(appRoutes)}</Routes>
+        </Suspense>
+      </BrowserRouter>
+    </Provider>
+  );
+};
 
-export default App
+export const ProtectedRoute: FC<PropsWithChildren<any>> = ({ children }) => {
+  return children ? children : <Outlet />;
+};
+
+const renderRoutes = (routes: CustomRouteObject[]) => {
+  return routes.map((e, index) => {
+    const element = e.isPublic ? (
+      e.element
+    ) : (
+      <ProtectedRoute>{e.element}</ProtectedRoute>
+    );
+    return (
+      <Route key={index} path={e.path} element={element}>
+        {e.children && renderRoutes(e.children)}
+      </Route>
+    );
+  });
+};
