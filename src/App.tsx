@@ -11,6 +11,7 @@ import {
 import "./App.css";
 import { store } from "./app/apis/store";
 import { PathConstants } from "./app/constants";
+import { ProductList } from "./app/features/auth copy/components/ProductList";
 import { Login } from "./app/features/auth/components/Login";
 
 type CustomRouteObject = RouteObject & {
@@ -32,7 +33,7 @@ const appRoutes: CustomRouteObject[] = [
     children: [
       {
         path: PathConstants.list,
-        element: <>Product List</>,
+        element: <ProductList />,
       },
     ],
   },
